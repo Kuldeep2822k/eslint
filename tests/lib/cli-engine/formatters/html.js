@@ -218,6 +218,42 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with illegal characters in ruleId", () => {
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<&\"'>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta: {
+				"<&\"'>": {
+					docs: {
+						url: "https://example.com/<&\"'>",
+					},
+				},
+			},
+		};
+
+		it("should return a string in HTML format with correctly escaped ruleId and ruleUrl", () => {
+			const result = formatter(code.results, { rulesMeta: code.rulesMeta });
+
+			assert.include(result, "https://example.com/&#60;&#38;&#34;&#39;&#62;");
+			assert.include(result, ">&#60;&#38;&#34;&#39;&#62;</a>");
+		});
+	});
+
 	describe("when passed a single warning message", () => {
 		const rulesMeta = {
 			foo: {
