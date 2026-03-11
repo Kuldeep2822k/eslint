@@ -872,4 +872,59 @@ describe("formatter:html", () => {
 			});
 		});
 	});
+
+	describe("when passing a single message with an xss payload in ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<'foo'>": {
+				type: "problem",
+
+				docs: {
+					description: "This is a malicious rule id",
+					recommended: true,
+					url: "https://example.com/\"javascript:alert(1)\"",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for a malicious rule id.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<'foo'>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should escape the ruleId and ruleUrl in the HTML output", () => {
+			const result = formatter(code.results, { rulesMeta });
+			const $ = cheerio.load(result);
+
+			checkContentRow($, $("tr")[1], {
+				group: "f-0",
+				lineCol: "5:10",
+				color: "clr-2",
+				message: "Unexpected foo.",
+				ruleId: "<'foo'>",
+			});
+
+			assert.isTrue(result.includes("<a href=\"https://example.com/&#34;javascript:alert(1)&#34;\" target=\"_blank\" rel=\"noopener noreferrer\">&#60;&#39;foo&#39;&#62;</a>"), "The malicious payload should be escaped.");
+		});
+	});
 });
