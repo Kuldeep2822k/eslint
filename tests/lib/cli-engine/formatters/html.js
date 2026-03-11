@@ -739,6 +739,53 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with malicious rule id and rule url", () => {
+		const rulesMeta = {
+			"<&\"'> foo": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule '<&\"'> foo'",
+					recommended: true,
+					url: "https://eslint.org/docs/rules/<&\"'>",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule '<&\"'> foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<&\"'> foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should escape ruleId and ruleUrl in the HTML output", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.include(result, "href=\"https://eslint.org/docs/rules/&#60;&#38;&#34;&#39;&#62;\"", "Check that ruleUrl is escaped");
+			assert.include(result, ">&#60;&#38;&#34;&#39;&#62; foo</a>", "Check that ruleId is escaped");
+		});
+	});
+
 	describe("when passing a single message with illegal characters", () => {
 		const rulesMeta = {
 			foo: {
