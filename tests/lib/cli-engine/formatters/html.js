@@ -822,6 +822,53 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with illegal characters in ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<&\"'> foo": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule '<&\"'> foo'",
+					recommended: true,
+					url: "https://eslint.org/docs/rules/<&\"'>",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule '<&\"'> foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<&\"'> foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with 1 issue in 1 file", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.isTrue(result.includes("&#60;&#38;&#34;&#39;&#62; foo"));
+			assert.isTrue(result.includes("https://eslint.org/docs/rules/&#60;&#38;&#34;&#39;&#62;"));
+		});
+	});
+
 	describe("when passed a single message with no line or column", () => {
 		const rulesMeta = {
 			foo: {
