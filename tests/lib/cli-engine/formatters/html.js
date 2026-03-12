@@ -739,6 +739,61 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with illegal characters in ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<&\"'>": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule '<&\"'>'",
+					recommended: true,
+					url: "https://eslint.org/docs/rules/<&\"'>",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule '<&\"'>'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<&\"'>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with 1 issue in 1 file", () => {
+			const result = formatter(code.results, { rulesMeta });
+			const $ = cheerio.load(result);
+
+			checkContentRow($, $("tr")[1], {
+				group: "f-0",
+				lineCol: "5:10",
+				color: "clr-2",
+				message: "Unexpected foo.",
+				ruleId: "<&\"'>",
+			});
+
+			assert.isTrue(result.includes("<a href=\"https://eslint.org/docs/rules/&#60;&#38;&#34;&#39;&#62;\" target=\"_blank\" rel=\"noopener noreferrer\">&#60;&#38;&#34;&#39;&#62;</a>"));
+		});
+	});
+
 	describe("when passing a single message with illegal characters", () => {
 		const rulesMeta = {
 			foo: {
