@@ -822,6 +822,53 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with illegal characters in ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"foo='\"": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "https://example.com/\"baz",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo='\"",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with 1 issue in 1 file and encoded ruleId and ruleUrl", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.include(result, "foo=&#39;&#34;");
+			assert.include(result, "https://example.com/&#34;baz");
+		});
+	});
+
 	describe("when passed a single message with no line or column", () => {
 		const rulesMeta = {
 			foo: {

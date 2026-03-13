@@ -1,0 +1,4 @@
+## 2024-05-18 - XSS Vulnerability in HTML Formatter
+**Vulnerability:** The HTML CLI formatter (`lib/cli-engine/formatters/html.js`) had an XSS vulnerability where `ruleId` and `ruleUrl` were directly interpolated into an anchor (`<a>`) tag without escaping.
+**Learning:** Even internal tool output like a CLI-generated HTML report can be vulnerable to XSS if external or dynamically generated data (like rule URLs or IDs, which can theoretically be customized by custom rules) is not properly encoded.
+**Prevention:** Ensure all variables interpolated into HTML strings, especially those derived from external configurations or plugins (like custom rule metadata), are strictly escaped using an HTML entity encoder (e.g., `encodeHTML`).
