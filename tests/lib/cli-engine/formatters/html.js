@@ -792,6 +792,63 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with malicious characters in ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<script>alert(1)</script>": {
+				type: "problem",
+
+				docs: {
+					description: "This is a malicious rule",
+					recommended: true,
+					url: "\"><script>alert(1)</script><a href=\"",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for a malicious rule.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<script>alert(1)</script>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with 1 issue in 1 file and safely encode malicious characters", () => {
+			const result = formatter(code.results, { rulesMeta });
+			const $ = cheerio.load(result);
+
+			// Check that the output contains the HTML entities directly
+			assert(result.includes("&#60;script&#62;alert(1)&#60;/script&#62;"), "Rule ID should be HTML-encoded");
+			assert(result.includes("&#34;&#62;&#60;script&#62;alert(1)&#60;/script&#62;&#60;a href=&#34;"), "Rule URL should be HTML-encoded");
+
+			checkContentRow($, $("tr")[1], {
+				group: "f-0",
+				lineCol: "5:10",
+				color: "clr-2",
+				message: "Unexpected foo.",
+				ruleId: "<script>alert(1)</script>", // Cheerio decodes entities automatically
+			});
+		});
+	});
+
 	describe("when passing a single message with no rule id or message", () => {
 		const code = [
 			{
