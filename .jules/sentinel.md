@@ -1,0 +1,4 @@
+## 2024-05-24 - Cross-Site Scripting (XSS) in HTML Formatter
+**Vulnerability:** The HTML formatter (`lib/cli-engine/formatters/html.js`) directly interpolated `ruleId` and `ruleUrl` into the HTML template (`href="${ruleUrl}"` and `${ruleId}`) without encoding. Since these values can be provided by third-party plugins, this could lead to Cross-Site Scripting (XSS) if a user runs ESLint with a malicious plugin and the HTML formatter.
+**Learning:** Even though `message` was being encoded with `encodeHTML(message)`, other dynamically provided fields like `ruleUrl` and `ruleId` were missed. In formatter or templating logic, all inputs originating from user configuration, files, or external plugins must be treated as untrusted.
+**Prevention:** Systematically wrap all dynamic values interpolated into HTML templates with appropriate escaping functions like `encodeHTML()`, regardless of whether the field seems like an unlikely vector.
