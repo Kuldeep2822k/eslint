@@ -1081,7 +1081,7 @@ describe("cli", () => {
 				const code = `--no-config-lookup --rule 'quotes: [1, single]' --o tests/output/eslint-output.txt ${filePath}`;
 
 				// TODO: fix this test to: await cli.execute(code);
-				await cli.execute(code, "var a = 'b'");
+				await cli.execute(code);
 
 				assert.isTrue(fs.existsSync("tests/output/eslint-output.txt"));
 				assert.strictEqual(
