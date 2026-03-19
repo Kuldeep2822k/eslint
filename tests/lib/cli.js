@@ -1077,8 +1077,8 @@ describe("cli", () => {
 
 			// https://github.com/eslint/eslint/issues/17660
 			it(`should write the file and create dirs if they don't exist even when output is empty`, async () => {
-				const filePath = getFixturePath("single-quoted.js");
-				const code = `--no-config-lookup --no-ignore --no-warn-ignored --rule 'quotes: [1, single]' --o tests/output/eslint-output.txt ${filePath}`;
+				const filePath = "tests/fixtures/single-quoted.js";
+				const code = `--no-config-lookup --rule 'quotes: [1, single]' --o tests/output/eslint-output.txt ${filePath}`;
 
 				await cli.execute(code);
 
