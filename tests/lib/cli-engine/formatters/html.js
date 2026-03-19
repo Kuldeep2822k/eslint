@@ -739,6 +739,69 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with malicious ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<script>alert('ruleId')</script>": {
+				type: "problem",
+
+				docs: {
+					description: "This is a malicious rule",
+					recommended: true,
+					// eslint-disable-next-line no-script-url -- Testing malicious URL
+					url: "javascript:alert('url')",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for a malicious rule.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<script>alert('ruleId')</script>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with properly encoded ruleId and no malicious url", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert(
+				result.includes(
+					"&#60;script&#62;alert(&#39;ruleId&#39;)&#60;/script&#62;",
+				),
+			);
+			// eslint-disable-next-line no-script-url -- Testing malicious URL
+			assert(!result.includes("javascript:alert('url')"));
+
+			const $ = cheerio.load(result);
+
+			checkContentRow($, $("tr")[1], {
+				group: "f-0",
+				lineCol: "5:10",
+				color: "clr-2",
+				message: "Unexpected foo.",
+				ruleId: "<script>alert('ruleId')</script>",
+			});
+		});
+	});
+
 	describe("when passing a single message with illegal characters", () => {
 		const rulesMeta = {
 			foo: {
