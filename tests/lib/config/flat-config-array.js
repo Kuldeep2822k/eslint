@@ -3060,7 +3060,7 @@ describe("FlatConfigArray", () => {
 							error.messageTemplate,
 							"eslintrc-incompat",
 						);
-						assert.deepStrictEqual(error.cause.messageData, {
+						assert.deepStrictEqual(error.messageData, {
 							key,
 						});
 						return;
