@@ -792,6 +792,85 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a rule with a malicious or invalid ruleUrl", () => {
+		const rulesMeta = {
+			"foo-rule": {
+				type: "problem",
+				docs: {
+					description: "This is rule 'foo-rule'",
+					recommended: true,
+					url: "javascript:alert(1)",
+				},
+				messages: {},
+			},
+			"bar-rule": {
+				type: "problem",
+				docs: {
+					description: "This is rule 'bar-rule'",
+					recommended: true,
+					url: "https://eslint.org/docs/rules/bar-rule\" onclick=\"alert('xss')",
+				},
+				messages: {},
+			},
+			"invalid-rule<>&\"'": {
+				type: "problem",
+				docs: {
+					description: "This rule has a bad name",
+					url: "https://eslint.org/docs/rules/bad-name",
+				},
+				messages: {},
+			}
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 3,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Malicious URL protocol",
+							severity: 2,
+							line: 1,
+							column: 1,
+							ruleId: "foo-rule",
+						},
+						{
+							message: "Malicious URL payload",
+							severity: 2,
+							line: 2,
+							column: 1,
+							ruleId: "bar-rule",
+						},
+						{
+							message: "Malicious rule ID",
+							severity: 2,
+							line: 3,
+							column: 1,
+							ruleId: "invalid-rule<>&\"'",
+						},
+					],
+				},
+			],
+		};
+
+		it("should render a string in HTML format safely", () => {
+			const result = formatter(code.results, { rulesMeta });
+			const $ = cheerio.load(result);
+
+			const fooRuleLink = $("tr.f-0:nth-child(2) a");
+			assert.strictEqual(fooRuleLink.attr("href"), "", "Invalid protocol should be empty");
+			assert.strictEqual(fooRuleLink.text(), "foo-rule");
+
+			const barRuleLink = $("tr.f-0:nth-child(3) a");
+			// Testing strict encoded html to avoid cheerio auto-decoding in assertions
+			assert.ok(result.includes("https://eslint.org/docs/rules/bar-rule&#34; onclick=&#34;alert(&#39;xss&#39;)"), "URL should be HTML encoded");
+
+			// Testing strict encoded html to avoid cheerio auto-decoding in assertions
+			assert.ok(result.includes("invalid-rule&#60;&#62;&#38;&#34;&#39;"), "Rule ID should be correctly HTML encoded in text");
+		});
+	});
+
 	describe("when passing a single message with no rule id or message", () => {
 		const code = [
 			{
