@@ -3057,7 +3057,7 @@ describe("FlatConfigArray", () => {
 							`Key "${key}": This appears to be in eslintrc format rather than flat config format.`,
 						);
 						assert.strictEqual(
-							error.cause.messageTemplate,
+							error.messageTemplate,
 							"eslintrc-incompat",
 						);
 						assert.deepStrictEqual(error.cause.messageData, {
