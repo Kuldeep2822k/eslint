@@ -1,0 +1,4 @@
+## 2024-05-18 - XSS Vulnerabilities in HTML Formatter
+**Vulnerability:** The HTML CLI formatter generated an `href` attribute based on `ruleUrl` provided in the rule's metadata, without checking the protocol. Also, both `ruleUrl` and `ruleId` were injected into HTML template string without being HTML encoded. This could allow malicious ESLint rules to execute URI-based and attribute-breakout XSS attacks.
+**Learning:** Even internal formatting components like HTML reporters must validate and sanitize all dynamically injected variables, especially attributes containing URLs. HTML encoding alone does not prevent `javascript:` execution if protocol filtering is missing.
+**Prevention:** Use an allowlist approach for URL protocols (e.g., `http:`/`https:`) when injecting dynamically derived URL values. Always apply HTML encoding (`encodeHTML()`) on any variable injected into an HTML payload, including attributes like `href` and text nodes like `ruleId`.
