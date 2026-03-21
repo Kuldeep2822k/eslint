@@ -10073,6 +10073,22 @@ describe("ESLint", () => {
 			assert.strictEqual(typeof formatter.format, "function");
 		});
 
+		it("should return a formatter object when a local file resembling a scoped package is requested", async () => {
+			const engine = new ESLint({ cwd: getFixturePath("scoped-formatters") });
+			const formatter = await engine.loadFormatter("@scope/simple.js");
+
+			assert.strictEqual(typeof formatter, "object");
+			assert.strictEqual(typeof formatter.format, "function");
+		});
+
+		it("should return a formatter object when an unscoped local file from a subdirectory is requested using a relative path without leading ./", async () => {
+			const engine = new ESLint({ cwd: getFixturePath() });
+			const formatter = await engine.loadFormatter("formatters/simple.js");
+
+			assert.strictEqual(typeof formatter, "object");
+			assert.strictEqual(typeof formatter.format, "function");
+		});
+
 		it("should throw if a custom formatter doesn't exist", async () => {
 			const engine = new ESLint();
 			const formatterPath = getFixturePath(
