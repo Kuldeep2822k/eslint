@@ -822,6 +822,195 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passed a single message with malicious javascript: url", () => {
+		const rulesMeta = {
+			foo: {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					// eslint-disable-next-line no-script-url -- Testing malicious URL
+					url: "javascript:alert('xss')",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should not include the malicious javascript: url in the html", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			// eslint-disable-next-line no-script-url -- Testing malicious URL
+			assert.notInclude(result, "javascript:alert('xss')", "Should not include malicious url");
+			assert.include(result, 'href=""', "Should have empty href");
+		});
+	});
+
+	describe("when passed a single message with malicious data: url", () => {
+		const rulesMeta = {
+			foo: {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "data:text/html,<script>alert('xss')</script>",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should not include the malicious data: url in the html", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.notInclude(result, "data:text/html,<script>alert('xss')</script>", "Should not include malicious url");
+			assert.include(result, 'href=""', "Should have empty href");
+		});
+	});
+
+	describe("when passed a single message with malicious vbscript: url", () => {
+		const rulesMeta = {
+			foo: {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "vbscript:msgbox(\"xss\")",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should not include the malicious vbscript: url in the html", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.notInclude(result, "vbscript:msgbox(\"xss\")", "Should not include malicious url");
+			assert.include(result, 'href=""', "Should have empty href");
+		});
+	});
+
+	describe("when passed a single message with valid rule url", () => {
+		const rulesMeta = {
+			foo: {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "https://eslint.org/docs/rules/foo",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should include the valid url in the html", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.include(result, 'href="https://eslint.org/docs/rules/foo"', "Should include valid url");
+		});
+	});
+
 	describe("when passed a single message with no line or column", () => {
 		const rulesMeta = {
 			foo: {

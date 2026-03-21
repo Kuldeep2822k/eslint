@@ -1,0 +1,4 @@
+## 2024-05-28 - HTML Formatter XSS Vulnerability
+**Vulnerability:** The HTML formatter (`lib/cli-engine/formatters/html.js`) was vulnerable to Cross-Site Scripting (XSS) via unencoded HTML attributes and unsafe URL protocols (e.g., `javascript:`, `data:`, `vbscript:`). Specifically, `ruleId` and `ruleUrl` were being interpolated directly into `<a href="...">...</a>` tags without encoding.
+**Learning:** Even if the *content* of an HTML tag is encoded (like the `message`), an attacker can break out of an attribute context if the attribute value itself is not encoded, or execute arbitrary code if dangerous protocols are allowed in `href` attributes.
+**Prevention:** Always HTML-encode values placed within HTML attributes, and implement protocol allowlisting or filtering for URLs to ensure only safe protocols (`http://` and `https://`) are used in contexts like `href`.
