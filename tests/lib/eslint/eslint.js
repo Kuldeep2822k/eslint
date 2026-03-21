@@ -5404,7 +5404,9 @@ describe("ESLint", () => {
 			);
 			const commonFiles = {
 				"node_modules/pattern-processor/index.js": fs.readFileSync(
-					require.resolve("../../fixtures/processors/pattern-processor"),
+					require.resolve(
+						"../../fixtures/processors/pattern-processor",
+					),
 					"utf8",
 				),
 				"node_modules/eslint-plugin-markdown/index.js": `
@@ -10074,7 +10076,9 @@ describe("ESLint", () => {
 		});
 
 		it("should return a formatter object when a local file resembling a scoped package is requested", async () => {
-			const engine = new ESLint({ cwd: getFixturePath("scoped-formatters") });
+			const engine = new ESLint({
+				cwd: getFixturePath("scoped-formatters"),
+			});
 			const formatter = await engine.loadFormatter("@scope/simple.js");
 
 			assert.strictEqual(typeof formatter, "object");
@@ -10083,7 +10087,9 @@ describe("ESLint", () => {
 
 		it("should return a formatter object when an unscoped local file from a subdirectory is requested using a relative path without leading ./", async () => {
 			const engine = new ESLint({ cwd: getFixturePath() });
-			const formatter = await engine.loadFormatter("formatters/simple.js");
+			const formatter = await engine.loadFormatter(
+				"formatters/simple.js",
+			);
 
 			assert.strictEqual(typeof formatter, "object");
 			assert.strictEqual(typeof formatter.format, "function");
