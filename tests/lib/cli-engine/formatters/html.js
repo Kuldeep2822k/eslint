@@ -822,6 +822,44 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a malicious ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<script>alert(1)</script>": {
+				docs: {
+					url: "javascript:alert(1)" // eslint-disable-line no-script-url -- Testing dangerous URLs
+				}
+			}
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<script>alert(1)</script>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should HTML-encode the ruleId and filter out dangerous protocols from ruleUrl", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.include(result, "&#60;script&#62;alert(1)&#60;/script&#62;");
+			assert.notInclude(result, "<script>alert(1)</script>");
+			assert.notInclude(result, "javascript:alert(1)"); // eslint-disable-line no-script-url -- Testing dangerous URLs
+		});
+	});
+
 	describe("when passed a single message with no line or column", () => {
 		const rulesMeta = {
 			foo: {
