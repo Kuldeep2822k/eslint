@@ -872,4 +872,48 @@ describe("formatter:html", () => {
 			});
 		});
 	});
+
+	describe("when passing a malicious ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"<span>malicious</span>": {
+				type: "problem",
+				docs: {
+					description: "This is a malicious ruleId",
+					url: "javascript:alert(1)", // eslint-disable-line no-script-url -- Testing dangerous URLs
+				},
+				messages: {
+					message1: "Malicious message",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Malicious foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<span>malicious</span>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with the dangerous URL removed and ruleId encoded", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			// Use raw string checks because cheerio auto-unescapes/handles entities
+			assert.isTrue(result.includes("href=\"\""));
+			assert.isTrue(result.includes("&#60;span&#62;malicious&#60;/span&#62;"));
+			assert.isFalse(result.includes("javascript:alert(1)")); // eslint-disable-line no-script-url -- Testing dangerous URLs
+		});
+	});
 });
