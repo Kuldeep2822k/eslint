@@ -4031,6 +4031,7 @@ export interface ESLintRules extends Linter.RulesRecord {
 	 * @since 2.0.0-alpha-2
 	 * @see https://eslint.org/docs/latest/rules/no-unmodified-loop-condition
 	 */
+    
 	"no-unmodified-loop-condition": Linter.RuleEntry<[]>;
 
 	/**
