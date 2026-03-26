@@ -872,4 +872,96 @@ describe("formatter:html", () => {
 			});
 		});
 	});
+
+	describe("when ruleId and ruleUrl contain HTML tags and dangerous protocols", () => {
+		const rulesMeta = {
+			"<b>foo</b>": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "javascript:alert(1)",
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "<b>foo</b>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should correctly HTML-encode ruleId and remove dangerous URLs to prevent XSS", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			// Verify that the exact encoded entities are present (Cheerio parses these and decodes them, so we check raw string).
+			assert.isTrue(result.includes("&#60;b&#62;foo&#60;/b&#62;"), "ruleId should be HTML encoded");
+
+			// Verify that the javascript: URL is stripped
+			assert.isFalse(result.includes("javascript:alert(1)"), "Dangerous protocols should be stripped from ruleUrl");
+
+			// Ensure that the empty string replaced the dangerous URL
+			assert.isTrue(result.includes("href=\"\""), "href should be empty when ruleUrl has dangerous protocol");
+		});
+	});
+
+	describe("when ruleUrl contains a vbscript: or data: protocol", () => {
+		const rulesMeta = {
+			"foo": {
+				docs: {
+					url: "  vbscript:msgbox(1)",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should correctly remove dangerous URLs to prevent XSS", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			// Verify that the vbscript: URL is stripped
+			assert.isFalse(result.includes("vbscript:msgbox(1)"), "Dangerous protocols should be stripped from ruleUrl");
+
+			// Ensure that the empty string replaced the dangerous URL
+			assert.isTrue(result.includes("href=\"\""), "href should be empty when ruleUrl has dangerous protocol");
+		});
+	});
 });

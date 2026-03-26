@@ -1,0 +1,4 @@
+## 2026-03-18 - XSS in HTML Formatter Rule URLs and IDs
+**Vulnerability:** The HTML formatter (`lib/cli-engine/formatters/html.js`) interpolated unescaped `ruleId`s and unsanitized `ruleUrl`s directly into `href` attributes. This allowed malicious URLs like `javascript:alert(1)` to be generated and executed if a user clicked a link in the report.
+**Learning:** `encodeHTML()` was strictly applied to messages and file paths but omitted on the `ruleId`s and `ruleUrl`s because they were assumed to be trusted strings from valid ESLint rules. We must remember that any dynamic input, even from meta documents of external plugins/rules, could contain malicious payloads and needs standard encoding + protocol filtering.
+**Prevention:** Always HTML-encode all variables interpolated into HTML elements/attributes, and strictly filter or allowlist URL protocols (blocking `javascript:`, `vbscript:`, `data:`) when generating hyperlinks.
