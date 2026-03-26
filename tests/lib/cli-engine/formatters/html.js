@@ -822,6 +822,77 @@ describe("formatter:html", () => {
 		});
 	});
 
+	describe("when passing a single message with malicious ruleId and ruleUrl", () => {
+		const rulesMeta = {
+			"foo\"><script>alert(1)</script>": {
+				type: "problem",
+
+				docs: {
+					description: "This is rule 'foo'",
+					recommended: true,
+					url: "javascript:alert(1)", // eslint-disable-line no-script-url -- Testing XSS via ruleUrl
+				},
+
+				fixable: "code",
+
+				messages: {
+					message1: "This is a message for rule 'foo'.",
+				},
+			},
+		};
+		const code = {
+			results: [
+				{
+					filePath: "foo.js",
+					errorCount: 1,
+					warningCount: 0,
+					messages: [
+						{
+							message: "Unexpected foo.",
+							severity: 2,
+							line: 5,
+							column: 10,
+							ruleId: "foo\"><script>alert(1)</script>",
+							source: "foo",
+						},
+					],
+				},
+			],
+			rulesMeta,
+		};
+
+		it("should return a string in HTML format with 1 issue in 1 file and no bad protocol or unescaped ruleId", () => {
+			const result = formatter(code.results, { rulesMeta });
+
+			assert.include(
+				result,
+				"foo&#34;&#62;&#60;script&#62;alert(1)&#60;/script&#62;",
+				"Check that ruleId is properly HTML encoded"
+			);
+			assert.notInclude(
+				result,
+				"javascript:alert(1)", // eslint-disable-line no-script-url -- Testing XSS via ruleUrl
+				"Check that javascript: protocol is stripped from ruleUrl"
+			);
+
+			// Use cheerio to verify the href is empty and the text is correct
+			const $ = cheerio.load(result);
+
+			checkContentRow($, $("tr")[1], {
+				group: "f-0",
+				lineCol: "5:10",
+				color: "clr-2",
+				message: "Unexpected foo.",
+				ruleId: "foo\"><script>alert(1)</script>",
+			});
+			assert.strictEqual(
+				$($($("tr")[1]).find("td")[3]).find("a").attr("href"),
+				"",
+				"Check that bad protocol is completely removed"
+			);
+		});
+	});
+
 	describe("when passed a single message with no line or column", () => {
 		const rulesMeta = {
 			foo: {
