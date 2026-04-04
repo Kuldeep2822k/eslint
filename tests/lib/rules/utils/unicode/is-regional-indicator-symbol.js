@@ -8,31 +8,19 @@ const assert = require("chai").assert;
 const isRegionalIndicatorSymbol = require("../../../../../lib/rules/utils/unicode/is-regional-indicator-symbol");
 
 describe("isRegionalIndicatorSymbol", () => {
-    it("should return true for the lower bound of regional indicator symbols", () => {
-        assert.isTrue(isRegionalIndicatorSymbol(0x1f1e6));
-    });
+    const testCases = [
+        { description: "the lower bound of regional indicator symbols", code: 0x1f1e6, expected: true },
+        { description: "the upper bound of regional indicator symbols", code: 0x1f1ff, expected: true },
+        { description: "a character within the regional indicator symbols range", code: 0x1f1f0, expected: true },
+        { description: "a character just below the lower bound", code: 0x1f1e5, expected: false },
+        { description: "a character just above the upper bound", code: 0x1f200, expected: false },
+        { description: "a regular character code ('a')", code: 0x61, expected: false },
+        { description: "0", code: 0, expected: false }
+    ];
 
-    it("should return true for the upper bound of regional indicator symbols", () => {
-        assert.isTrue(isRegionalIndicatorSymbol(0x1f1ff));
-    });
-
-    it("should return true for a character within the regional indicator symbols range", () => {
-        assert.isTrue(isRegionalIndicatorSymbol(0x1f1f0));
-    });
-
-    it("should return false for a character just below the lower bound", () => {
-        assert.isFalse(isRegionalIndicatorSymbol(0x1f1e5));
-    });
-
-    it("should return false for a character just above the upper bound", () => {
-        assert.isFalse(isRegionalIndicatorSymbol(0x1f200));
-    });
-
-    it("should return false for a regular character code", () => {
-        assert.isFalse(isRegionalIndicatorSymbol(0x61)); // 'a'
-    });
-
-    it("should return false for 0", () => {
-        assert.isFalse(isRegionalIndicatorSymbol(0));
+    testCases.forEach(({ description, code, expected }) => {
+        it(`should return ${expected} for ${description}`, () => {
+            assert.strictEqual(isRegionalIndicatorSymbol(code), expected);
+        });
     });
 });
