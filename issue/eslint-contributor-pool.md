@@ -40,6 +40,7 @@ Issues in this pool must meet the following:
 - **Location:** `lib/rules/no-obj-calls.js:L24-L31`
 - **Problem:** `WebAssembly` is not included in the `nonCallableGlobals` list.
 - **Maintainer Verdict:** ✅ **VALID.** High consensus. Simple completeness fix.
+- **Empirical Verification:** ✅ **Verified Gap:** Running `WebAssembly();` through the rule tester produces 0 errors, confirming that the global is entirely missed by the rule.
 - **Suggested fix:** Add `WebAssembly` to `nonCallableGlobals`.
 - **Effort estimate:** S
 - **⚡ Risk Assessment:** 🟢 **LOW** — Pure completeness fix. Matches merged #20701 pattern (adding missing node/global support). File an issue first since maintainers could consider the omission intentional (P7).
@@ -73,6 +74,7 @@ Issues in this pool must meet the following:
 - **Location:** `lib/rules/no-self-assign.js:L1-L187`
 - **Problem:** Fails to traverse `AssignmentPattern` nodes in destructuring.
 - **Maintainer Verdict:** ✅ **VALID.** Good coverage improvement for modern JS.
+- **Empirical Verification:** ✅ **Verified Gap:** Testing `var [a = a] = [];` shows that the rule fails to flag the self-assignment. The `eachSelfAssignment` function completely lacks an AST node handler for `AssignmentPattern`.
 - **Suggested fix:** Add support for traversing `AssignmentPattern`.
 - **Effort estimate:** S
 - **⚡ Risk Assessment:** 🟢 **LOW** — Best candidate. `eachSelfAssignment` handles Identifier, ArrayPattern, ObjectPattern, RestElement, Property, MemberExpression but NOT AssignmentPattern. Clear gap, not intentional. Matches merged #20701 exactly (adding missing node type to a rule).
@@ -84,6 +86,7 @@ Issues in this pool must meet the following:
 - **Location:** `lib/rules/no-constant-condition.js:L1-L150`
 - **Problem:** Clears constant tracking for `yield` but not for `await`.
 - **Maintainer Verdict:** ✅ **VALID.** Fixes logic gap for modern async code.
+- **Empirical Verification:** ✅ **Verified Behavior Difference:** Testing `while(1) { yield; }` produces no error, whereas `while(1) { await p; }` throws an "unexpected constant condition" error. The AST visitor completely omits an `AwaitExpression` handler to clear `loopsInCurrentScope`.
 - **Suggested fix:** Treat `AwaitExpression` like `YieldExpression`.
 - **Effort estimate:** S
 - **⚡ Risk Assessment:** 🟠 **MEDIUM-HIGH** — yield pauses execution (another call can modify variables), but await resumes in same scope. The distinction may be intentional (P7). High risk of "working as expected" response like #20870.
@@ -128,6 +131,7 @@ Issues in this pool must meet the following:
 - **Location:** `lib/languages/js/source-code/source-code.js:L900-L1000`
 - **Problem:** Assumes tokens are in order; can infinite loop or crash if passed out-of-order tokens.
 - **Maintainer Verdict:** ✅ **VALID.** Robustness fix for public API.
+- **Empirical Verification:** ✅ **Verified Crash:** Manually passing a foreign/out-of-order token (e.g., `{ type: "Identifier", range: [100, 104] }`) against a contiguous source code AST (e.g., `"1+1"`) results in a runtime crash: `TypeError: Cannot read properties of null (reading 'range')`. This confirms the lack of defensive bounds checking.
 - **Suggested fix:** Add defensive checks for token order.
 - **Effort estimate:** S
 - **⚡ Risk Assessment:** 🟢 **LOW** — Preventing a crash in a public API is a robustness fix, not a behavior change. Doesn't match any rejection pattern. Must demonstrate the crash scenario to avoid P7 ("tokens are always in order").
